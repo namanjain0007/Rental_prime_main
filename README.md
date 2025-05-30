@@ -4,27 +4,45 @@ A full-stack admin dashboard for the Rental Prima platform with modern UI and co
 
 ## Deployment
 
-### Deploying to Vercel
+### Backend Deployment (Render)
 
-#### Frontend Deployment
+The backend is currently deployed on Render at: `https://rental-prime-main-backend.onrender.com`
+
+To deploy your own backend:
 1. Push your code to a GitHub repository
-2. Log in to Vercel (https://vercel.com)
-3. Click "New Project" and import your GitHub repository
-4. Select the `frontend` directory as the root directory
+2. Log in to Render (https://render.com)
+3. Create a new Web Service
+4. Connect your GitHub repository and select the `backend` directory
 5. Add the following environment variables:
-   - `REACT_APP_API_URL`: URL of your deployed backend (e.g., https://rental-prima-backend.vercel.app)
-   - `REACT_APP_SUPABASE_URL`: Your Supabase URL
-   - `REACT_APP_SUPABASE_ANON_KEY`: Your Supabase anonymous key
-6. Click "Deploy"
-
-#### Backend Deployment
-1. In the same GitHub repository, create a new project in Vercel
-2. Select the `backend` directory as the root directory
-3. Add the following environment variables:
    - `NODE_ENV`: Set to `production`
    - `SUPABASE_URL`: Your Supabase URL
    - `SUPABASE_ANON_KEY`: Your Supabase anonymous key
-4. Click "Deploy"
+6. Deploy the service
+
+### Frontend Deployment Options
+
+#### Option 1: Netlify
+1. Push your code to a GitHub repository
+2. Log in to Netlify (https://netlify.com)
+3. Click "New site from Git" and connect your repository
+4. Set build directory to `frontend`
+5. Set build command to `npm run build`
+6. Set publish directory to `frontend/build`
+7. Add environment variables:
+   - `REACT_APP_API_URL`: Your deployed backend URL
+   - `REACT_APP_SUPABASE_URL`: Your Supabase URL
+   - `REACT_APP_SUPABASE_ANON_KEY`: Your Supabase anonymous key
+
+#### Option 2: GitHub Pages
+1. Build the project: `cd frontend && npm run build`
+2. Install gh-pages: `npm install --save-dev gh-pages`
+3. Add to package.json scripts: `"deploy": "gh-pages -d build"`
+4. Run: `npm run deploy`
+
+#### Option 3: Traditional Web Hosting
+1. Build the project: `cd frontend && npm run build`
+2. Upload the contents of the `frontend/build` directory to your web server
+3. Configure your web server to serve the React app (handle client-side routing)
 
 ## Project Structure
 

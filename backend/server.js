@@ -53,8 +53,8 @@ app.use(
 
       const allowedOrigins = [
         "http://localhost:3000",
-        "https://rental-prima-frontend.vercel.app",
-        /\.vercel\.app$/,
+        // Add your frontend deployment URLs here
+        // Example: "https://your-frontend-domain.com",
       ];
 
       // Check if the origin is allowed
@@ -86,7 +86,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 
-// Health check endpoint for Vercel deployment
+// Health check endpoint
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     status: "ok",
@@ -140,16 +140,14 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Define PORT - explicitly use 5001 for development
-const PORT = 5001; // Force port 5001 regardless of environment variables
+// Define PORT - use environment variable or default to 5001
+const PORT = process.env.PORT || 5001;
 
-// Only start the server if we're not in a serverless environment
-if (process.env.NODE_ENV !== "production" || !process.env.VERCEL) {
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    console.log(`Supabase client initialized with URL: ${supabaseUrl}`);
-  });
-}
+// Start the server
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+  console.log(`Supabase client initialized with URL: ${supabaseUrl}`);
+});
 
-// Export the app for serverless functions
+// Export the app for potential use as a module
 module.exports = app;

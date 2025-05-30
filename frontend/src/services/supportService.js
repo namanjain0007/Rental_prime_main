@@ -1,77 +1,67 @@
-import BaseService from './baseService';
-import supabase from '../utils/supabaseClient';
+import BaseService from "./baseService";
+import apiClient from "../utils/apiClient";
 
 class SupportService extends BaseService {
   constructor() {
-    super('support_tickets');
+    super("support_tickets");
   }
 
   // Get tickets with filters
   async getTickets(filters = {}) {
     try {
-      let query = supabase.from(this.tableName).select(`
-        *,
-        replies:support_replies(*)
-      `);
-      
+      const params = new URLSearchParams();
+
       // Apply filters if provided
-      if (filters.status && filters.status !== 'all') {
-        query = query.eq('status', filters.status);
+      if (filters.status && filters.status !== "all") {
+        params.append("status", filters.status);
       }
-      
-      if (filters.priority && filters.priority !== 'all') {
-        query = query.eq('priority', filters.priority);
+
+      if (filters.priority && filters.priority !== "all") {
+        params.append("priority", filters.priority);
       }
-      
+
       if (filters.search) {
-        query = query.or(`subject.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
+        params.append("search", filters.search);
       }
-      
-      const { data, error } = await query.order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data;
+
+      const response = await apiClient.get(
+        `${this.baseUrl}?${params.toString()}`
+      );
+      return response.data.data || response.data;
     } catch (error) {
-      console.error('Error fetching support tickets with filters:', error);
+      console.error("Error fetching support tickets with filters:", error);
       throw error;
     }
   }
-  
+
   // Add reply to a ticket
   async addReply(ticketId, replyData) {
     try {
-      const { data, error } = await supabase
-        .from('support_replies')
-        .insert([{
-          ticket_id: ticketId,
-          ...replyData
-        }])
-        .select();
-      
-      if (error) throw error;
-      return data[0];
+      const response = await apiClient.post(`/api/support_replies`, {
+        ticket_id: ticketId,
+        ...replyData,
+      });
+
+      return response.data.data || response.data;
     } catch (error) {
-      console.error('Error adding reply to ticket:', error);
+      console.error("Error adding reply to ticket:", error);
       throw error;
     }
   }
-  
+
   // Update ticket status
   async updateStatus(ticketId, status, priority = null) {
     try {
       const updates = { status };
       if (priority) updates.priority = priority;
-      
-      const { data, error } = await supabase
-        .from(this.tableName)
-        .update(updates)
-        .eq('id', ticketId)
-        .select();
-      
-      if (error) throw error;
-      return data[0];
+
+      const response = await apiClient.put(
+        `${this.baseUrl}/${ticketId}`,
+        updates
+      );
+      return response.data.data || response.data;
     } catch (error) {
-      console.error('Error updating ticket status:', error);
+      console.error("Error updating ticket status:", error);
       throw error;
     }
   }

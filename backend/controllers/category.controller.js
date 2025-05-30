@@ -307,13 +307,25 @@ exports.updateCategory = async (req, res) => {
       updateData.status = status;
     }
 
-    // Update slug if provided
+    // Update slug if provided OR if name is being updated
+    let newSlug = null;
     if (slug !== undefined) {
-      const newSlug = slug
+      // Use provided slug
+      newSlug = slug
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/(^-|-$)/g, "");
+    } else if (name !== undefined) {
+      // Auto-generate slug from new name
+      newSlug = name
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "");
+    }
 
+    // If we have a new slug, validate it's unique
+    if (newSlug) {
       // Check if new slug already exists (excluding current category)
       const { data: slugExists, error: slugError } = await supabase
         .from("categories")

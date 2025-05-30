@@ -1,31 +1,31 @@
-import BaseService from './baseService';
-import supabase from '../utils/supabaseClient';
+import BaseService from "./baseService";
+import apiClient from "../utils/apiClient";
 
 class UserService extends BaseService {
   constructor() {
-    super('users');
+    super("users");
   }
 
   // Get users with filters
   async getUsers(filters = {}) {
     try {
-      let query = supabase.from(this.tableName).select('*, roles(*)');
-      
+      const params = new URLSearchParams();
+
       // Apply filters if provided
-      if (filters.status && filters.status !== 'all') {
-        query = query.eq('status', filters.status);
+      if (filters.status && filters.status !== "all") {
+        params.append("status", filters.status);
       }
-      
+
       if (filters.search) {
-        query = query.or(`name.ilike.%${filters.search}%,email.ilike.%${filters.search}%`);
+        params.append("search", filters.search);
       }
-      
-      const { data, error } = await query.order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data;
+
+      const response = await apiClient.get(
+        `${this.baseUrl}?${params.toString()}`
+      );
+      return response.data.data || response.data;
     } catch (error) {
-      console.error('Error fetching users with filters:', error);
+      console.error("Error fetching users with filters:", error);
       throw error;
     }
   }
@@ -33,15 +33,10 @@ class UserService extends BaseService {
   // Get active roles
   async getActiveRoles() {
     try {
-      const { data, error } = await supabase
-        .from('roles')
-        .select('*')
-        .order('name');
-      
-      if (error) throw error;
-      return data;
+      const response = await apiClient.get("/api/roles");
+      return response.data.data || response.data;
     } catch (error) {
-      console.error('Error fetching active roles:', error);
+      console.error("Error fetching active roles:", error);
       throw error;
     }
   }
@@ -49,20 +44,12 @@ class UserService extends BaseService {
   // Create a new user
   async create(userData) {
     try {
-      console.log('Creating user with data:', userData);
-      
-      const { data, error } = await supabase
-        .from('users')
-        .insert([userData])
-        .select('*, roles(*)');
-      
-      if (error) {
-        console.error('Create error:', error);
-        throw error;
-      }
-      
-      console.log('Create result:', data);
-      return data[0];
+      console.log("Creating user with data:", userData);
+
+      const response = await apiClient.post(this.baseUrl, userData);
+
+      console.log("Create result:", response.data);
+      return response.data.data || response.data;
     } catch (error) {
       console.error(`Error creating user:`, error);
       throw error;
@@ -72,26 +59,13 @@ class UserService extends BaseService {
   // Update a user
   async update(id, updates) {
     try {
-      console.log('Updating user with ID:', id);
-      console.log('Update data:', updates);
-      
-      // Make a direct API call to update the user
-      const response = await fetch(`/api/users/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updates)
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to update user');
-      }
-      
-      const result = await response.json();
-      console.log('Update result:', result);
-      return result.data;
+      console.log("Updating user with ID:", id);
+      console.log("Update data:", updates);
+
+      const response = await apiClient.put(`${this.baseUrl}/${id}`, updates);
+
+      console.log("Update result:", response.data);
+      return response.data.data || response.data;
     } catch (error) {
       console.error(`Error updating user:`, error);
       throw error;
