@@ -11,14 +11,11 @@ import {
 } from "react-icons/ri";
 import { useAuth } from "../../context/AuthContext";
 import adminService from "../../services/adminService";
-import roleService from "../../services/roleService";
 
 const AdminManagement = () => {
   const { user } = useAuth();
   const [admins, setAdmins] = useState([]);
-  const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [rolesLoading, setRolesLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState("add"); // 'add' or 'edit'
   const [currentAdmin, setCurrentAdmin] = useState(null);
@@ -27,7 +24,6 @@ const AdminManagement = () => {
     email: "",
     password: "",
     user_type: "admin",
-    role_id: "",
     status: "active",
   });
   const [searchTerm, setSearchTerm] = useState("");
@@ -82,24 +78,10 @@ const AdminManagement = () => {
     }
   }, [statusFilter, searchTerm, isSuperAdmin]);
 
-  const fetchRoles = useCallback(async () => {
-    try {
-      const roleData = await roleService.getAllRoles();
-      console.log("Fetched roles:", roleData);
-      setRoles(roleData);
-    } catch (error) {
-      console.error("Error fetching roles:", error);
-      toast.error("Failed to fetch roles");
-    } finally {
-      setRolesLoading(false);
-    }
-  }, []);
-
-  // Fetch admins and roles on component mount
+  // Fetch admins on component mount
   useEffect(() => {
     fetchAdmins();
-    fetchRoles();
-  }, [fetchAdmins, fetchRoles]);
+  }, [fetchAdmins]);
 
   // Handle form input changes
   const handleChange = (e) => {
@@ -121,49 +103,21 @@ const AdminManagement = () => {
 
     // Initialize form with default values immediately
     const initializeForm = () => {
-      // Find the default admin role ID (since default user_type is admin)
-      const adminRole = roles.find((role) => role.name === "admin");
-
-      console.log("Available roles:", roles);
-      console.log("Found admin role:", adminRole);
-
       const formDataToSet = {
         name: "",
         email: "",
         password: "",
         user_type: "admin", // Default user type for admin users
-        role_id: adminRole ? adminRole.id : "",
         status: "active",
       };
 
       setFormData(formDataToSet);
 
-      console.log(
-        "Initialized form data with role_id:",
-        adminRole ? adminRole.id : ""
-      );
+      console.log("Initialized form data:", formDataToSet);
     };
 
-    // Initialize form immediately if roles are loaded
-    if (roles.length > 0) {
-      initializeForm();
-    } else {
-      // Set basic form data and fetch roles if not loaded
-      setFormData({
-        name: "",
-        email: "",
-        password: "",
-        user_type: "admin",
-        role_id: "",
-        status: "active",
-      });
-
-      if (!rolesLoading) {
-        setRolesLoading(true);
-        fetchRoles();
-      }
-    }
-
+    // Initialize form immediately
+    initializeForm();
     setShowModal(true);
   };
 
@@ -186,7 +140,6 @@ const AdminManagement = () => {
       password: "", // Don't populate password for security
       status: admin.status || "active",
       user_type: admin.user_type || "admin",
-      role_id: admin.role_id || "",
     };
 
     setFormData(formDataToSet);
@@ -195,12 +148,6 @@ const AdminManagement = () => {
 
     // Show modal immediately
     setShowModal(true);
-
-    // Only fetch roles if they're not already loaded
-    if (roles.length === 0 && !rolesLoading) {
-      setRolesLoading(true);
-      fetchRoles();
-    }
   };
 
   // Handle form submission
@@ -215,7 +162,6 @@ const AdminManagement = () => {
           email: formData.email,
           password: formData.password,
           user_type: formData.user_type,
-          role_id: formData.role_id,
           status: formData.status,
         };
 
@@ -230,7 +176,6 @@ const AdminManagement = () => {
           name: formData.name,
           email: formData.email,
           user_type: formData.user_type,
-          role_id: formData.role_id,
           status: formData.status,
         };
 
@@ -609,32 +554,10 @@ const AdminManagement = () => {
                     </select>
                   </div>
                   <div className="mb-4">
-                    <label
-                      htmlFor="role_id"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Role
-                    </label>
-                    <select
-                      id="role_id"
-                      name="role_id"
-                      value={formData.role_id}
-                      onChange={handleChange}
-                      className="input"
-                      required
-                    >
-                      <option value="">Select a role</option>
-                      {roles.map((role) => (
-                        <option key={role.id} value={role.id}>
-                          {role.name} - {role.description}
-                        </option>
-                      ))}
-                    </select>
-                    {rolesLoading && (
-                      <div className="text-sm text-gray-500 mt-1">
-                        Loading roles...
-                      </div>
-                    )}
+                    <div className="text-sm text-gray-600 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <strong>Note:</strong> The role will be automatically
+                      assigned based on the selected user type.
+                    </div>
                   </div>
                   <div className="mb-4">
                     <label

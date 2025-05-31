@@ -97,7 +97,7 @@ exports.createAdminUser = async (req, res) => {
       });
     }
 
-    const { name, email, password, status, user_type, role_id } = req.body;
+    const { name, email, password, status, user_type } = req.body;
 
     // Validate required fields
     if (!name || !email || !password || !user_type) {
@@ -142,26 +142,23 @@ exports.createAdminUser = async (req, res) => {
       });
     }
 
-    // If role_id is not provided, get the appropriate role based on user_type
-    let adminRoleId = role_id;
-    if (!adminRoleId) {
-      // Map user_type to role name for admin users
-      const roleName = user_type;
+    // Automatically assign role based on user_type (ignore role_id from request)
+    // Map user_type to role name for admin users
+    const roleName = user_type;
 
-      const { data: roleData, error: roleError } = await supabase
-        .from("roles")
-        .select("id")
-        .eq("name", roleName)
-        .single();
+    const { data: roleData, error: roleError } = await supabase
+      .from("roles")
+      .select("id")
+      .eq("name", roleName)
+      .single();
 
-      if (roleError) {
-        throw new Error(
-          `Role not found for user type ${user_type}. Error: ${roleError.message}`
-        );
-      }
-
-      adminRoleId = roleData.id;
+    if (roleError) {
+      throw new Error(
+        `Role not found for user type ${user_type}. Error: ${roleError.message}`
+      );
     }
+
+    const adminRoleId = roleData.id;
 
     // Create admin user in Supabase Auth
     const { data: authData, error: authError } =
@@ -301,6 +298,25 @@ exports.updateAdminUser = async (req, res) => {
           error: authError.message,
         });
       }
+    }
+
+    // If user_type is being updated, automatically assign the corresponding role
+    if (updateData.user_type) {
+      const roleName = updateData.user_type;
+
+      const { data: roleData, error: roleError } = await supabase
+        .from("roles")
+        .select("id")
+        .eq("name", roleName)
+        .single();
+
+      if (roleError) {
+        throw new Error(
+          `Role not found for user type ${updateData.user_type}. Error: ${roleError.message}`
+        );
+      }
+
+      updateData.role_id = roleData.id;
     }
 
     // Set updated_at timestamp
