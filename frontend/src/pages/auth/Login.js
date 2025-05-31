@@ -38,7 +38,15 @@ const Login = () => {
       }
     } catch (error) {
       console.error("Login error:", error);
-      toast.error("Login failed. Please check your credentials.");
+
+      // Handle specific error for unauthorized user types
+      if (error.message === "UNAUTHORIZED_USER_TYPE") {
+        toast.error(
+          "Access denied. Only admin users can access this dashboard."
+        );
+      } else {
+        toast.error("Login failed. Please check your credentials.");
+      }
     } finally {
       setLoading(false);
     }

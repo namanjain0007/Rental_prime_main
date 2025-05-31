@@ -10,6 +10,14 @@ const supabaseClient = createClient(config.supabaseUrl, config.supabaseKey);
 // @access  Private/SuperAdmin
 exports.getAdminUsers = async (req, res) => {
   try {
+    // Check if the requesting user is super_admin
+    if (!req.user || req.user.user_type !== "super_admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. Only super_admin can view admin users.",
+      });
+    }
+
     // Get all admin users with their role information
     const {
       data: adminUsers,
@@ -42,6 +50,14 @@ exports.getAdminUsers = async (req, res) => {
 // @access  Private/SuperAdmin
 exports.getAdminUser = async (req, res) => {
   try {
+    // Check if the requesting user is super_admin
+    if (!req.user || req.user.user_type !== "super_admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. Only super_admin can view admin users.",
+      });
+    }
+
     const { data: adminUser, error } = await supabase
       .from("admin_users")
       .select("*, roles(name, description, permissions)")
@@ -73,6 +89,14 @@ exports.getAdminUser = async (req, res) => {
 // @access  Private/SuperAdmin
 exports.createAdminUser = async (req, res) => {
   try {
+    // Check if the requesting user is super_admin
+    if (!req.user || req.user.user_type !== "super_admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. Only super_admin can create admin users.",
+      });
+    }
+
     const { name, email, password, status, user_type, role_id } = req.body;
 
     // Validate required fields
@@ -83,12 +107,20 @@ exports.createAdminUser = async (req, res) => {
       });
     }
 
-    // Validate user_type - only allow super_admin for admin_users table
-    if (user_type !== "super_admin") {
+    // Validate user_type - allow admin user types for admin_users table
+    const allowedAdminUserTypes = [
+      "super_admin",
+      "admin",
+      "manager",
+      "accountant",
+      "support",
+    ];
+    if (!allowedAdminUserTypes.includes(user_type)) {
       return res.status(400).json({
         success: false,
-        message:
-          "Invalid user_type. Only 'super_admin' is allowed for admin_users table. Use /api/users for vendor and customer users.",
+        message: `Invalid user_type. Allowed admin user types: ${allowedAdminUserTypes.join(
+          ", "
+        )}. Use /api/users for vendor and customer users.`,
       });
     }
 
@@ -114,7 +146,7 @@ exports.createAdminUser = async (req, res) => {
     let adminRoleId = role_id;
     if (!adminRoleId) {
       // Map user_type to role name for admin users
-      const roleName = user_type === "superadmin" ? "super_admin" : user_type;
+      const roleName = user_type;
 
       const { data: roleData, error: roleError } = await supabase
         .from("roles")
@@ -183,15 +215,33 @@ exports.createAdminUser = async (req, res) => {
 // @access  Private/SuperAdmin
 exports.updateAdminUser = async (req, res) => {
   try {
+    // Check if the requesting user is super_admin
+    if (!req.user || req.user.user_type !== "super_admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. Only super_admin can update admin users.",
+      });
+    }
+
     const updateData = { ...req.body };
 
-    // Validate user_type if being updated - only allow super_admin for admin_users table
-    if (updateData.user_type && updateData.user_type !== "super_admin") {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Invalid user_type. Only 'super_admin' is allowed for admin_users table. Use /api/users for vendor and customer users.",
-      });
+    // Validate user_type if being updated - allow admin user types for admin_users table
+    if (updateData.user_type) {
+      const allowedAdminUserTypes = [
+        "super_admin",
+        "admin",
+        "manager",
+        "accountant",
+        "support",
+      ];
+      if (!allowedAdminUserTypes.includes(updateData.user_type)) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid user_type. Allowed admin user types: ${allowedAdminUserTypes.join(
+            ", "
+          )}. Use /api/users for vendor and customer users.`,
+        });
+      }
     }
 
     // First, get the current admin user data to check what's being updated
@@ -290,6 +340,14 @@ exports.updateAdminUser = async (req, res) => {
 // @access  Private/SuperAdmin
 exports.deleteAdminUser = async (req, res) => {
   try {
+    // Check if the requesting user is super_admin
+    if (!req.user || req.user.user_type !== "super_admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. Only super_admin can delete admin users.",
+      });
+    }
+
     // First check if admin user exists
     const { data: adminUser, error: checkError } = await supabase
       .from("admin_users")

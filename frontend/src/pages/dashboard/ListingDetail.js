@@ -1,8 +1,12 @@
-import React from 'react';
-import MultiStepForm from '../../components/MultiStepForm';
+import React from "react";
+import { useParams } from "react-router-dom";
+import MultiStepForm from "../../components/MultiStepForm";
 
 const ListingDetail = () => {
-  return <MultiStepForm />;
+  const { id } = useParams();
+  const isEditMode = Boolean(id);
+
+  return <MultiStepForm isEditMode={isEditMode} listingId={id} />;
 };
 
 export default ListingDetail;

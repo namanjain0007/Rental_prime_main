@@ -138,6 +138,41 @@ const BasicInfoStep = ({ formData, onChange }) => {
           ))}
         </div>
       </div>
+      <div>
+        <label className="block text-sm font-medium text-blue-900 mb-1">
+          Status
+        </label>
+        <select
+          className="w-full px-4 py-2 border rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"
+          value={formData.status}
+          onChange={(e) => onChange("status", e.target.value)}
+        >
+          <option value="active">Active</option>
+          <option value="pending">Pending</option>
+          <option value="inactive">Inactive</option>
+        </select>
+        <span className="text-gray-400 text-xs">
+          Active listings are visible to customers
+        </span>
+      </div>
+      <div className="flex items-center gap-2 mt-4">
+        <input
+          type="checkbox"
+          checked={formData.isFeatured}
+          onChange={(e) => onChange("isFeatured", e.target.checked)}
+          className="accent-blue-600"
+          id="isFeatured"
+        />
+        <label
+          htmlFor="isFeatured"
+          className="text-sm font-medium text-blue-900"
+        >
+          Featured Listing
+        </label>
+        <span className="text-gray-400 text-xs ml-1">
+          (Highlight this listing)
+        </span>
+      </div>
     </div>
   );
 };

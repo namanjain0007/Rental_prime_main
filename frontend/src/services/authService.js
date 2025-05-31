@@ -46,6 +46,7 @@ class AuthService {
         return {
           session: response.data.session,
           user: response.data.user,
+          userTable: response.data.userTable, // Include userTable for admin access control
         };
       }
 
@@ -72,6 +73,7 @@ class AuthService {
       // Clear local storage
       localStorage.removeItem("token");
       localStorage.removeItem("user");
+      localStorage.removeItem("userTable");
 
       return { success: true };
     } catch (error) {
@@ -79,6 +81,7 @@ class AuthService {
       // Still clear local storage even if API call fails
       localStorage.removeItem("token");
       localStorage.removeItem("user");
+      localStorage.removeItem("userTable");
 
       return {
         success: true,

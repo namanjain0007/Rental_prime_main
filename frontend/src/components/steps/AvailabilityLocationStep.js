@@ -36,7 +36,7 @@ const AvailabilityLocationStep = ({ formData, onChange }) => {
       </div>
       <div>
         <label className="block text-sm font-medium text-blue-900 mb-1">
-          Pickup Location
+          Pickup Location <span className="text-red-500">*</span>
         </label>
         <input
           type="text"

@@ -2,7 +2,7 @@ import BaseService from "./baseService";
 
 class ListingService extends BaseService {
   constructor() {
-    super("listings");
+    super("admin/listings"); // Use admin listings endpoint for admin dashboard
   }
 
   /**
@@ -73,15 +73,16 @@ class ListingService extends BaseService {
         queryParams.append("orderDirection", filters.orderDirection);
       }
 
-      // Use the API endpoint instead of direct Supabase access
+      // Use the admin API endpoint for admin dashboard
       const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:5001";
-      const fullUrl = `${apiUrl}/api/listings?${queryParams.toString()}`;
-      console.log("Fetching listings from URL:", fullUrl);
+      const fullUrl = `${apiUrl}/api/admin/listings?${queryParams.toString()}`;
+      console.log("Fetching admin listings from URL:", fullUrl);
 
       const response = await fetch(fullUrl, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
 
@@ -90,16 +91,41 @@ class ListingService extends BaseService {
       if (!response.ok) {
         const errorData = await response.json();
         console.error("API error fetching listings:", errorData);
-        return [];
+        return {
+          data: [],
+          count: 0,
+          success: false,
+          error: errorData.message || "Failed to fetch listings",
+        };
       }
 
       const data = await response.json();
       console.log("Raw API response:", data);
-      return data.data || data || [];
+
+      // Return the full response object to maintain count and data structure
+      if (data.success && data.data) {
+        return {
+          data: data.data,
+          count: data.count || 0,
+          success: data.success,
+        };
+      }
+
+      // Fallback for unexpected response format
+      return {
+        data: Array.isArray(data) ? data : [],
+        count: 0,
+        success: false,
+      };
     } catch (error) {
       console.error("Error fetching listings with filters:", error);
-      // Return empty array instead of throwing to prevent UI errors
-      return [];
+      // Return proper format instead of throwing to prevent UI errors
+      return {
+        data: [],
+        count: 0,
+        success: false,
+        error: error.message || "Network error",
+      };
     }
   }
 
@@ -113,13 +139,14 @@ class ListingService extends BaseService {
       console.log("Fetching listing details for ID:", id);
 
       const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:5001";
-      const fullUrl = `${apiUrl}/api/listings/${id}`;
-      console.log("Fetching listing from URL:", fullUrl);
+      const fullUrl = `${apiUrl}/api/admin/listings/${id}`;
+      console.log("Fetching admin listing from URL:", fullUrl);
 
       const response = await fetch(fullUrl, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
 
@@ -132,7 +159,14 @@ class ListingService extends BaseService {
 
       const data = await response.json();
       console.log("Raw API response:", data);
-      return data.data || data;
+
+      // Return the data from the response
+      if (data.success && data.data) {
+        return data.data;
+      }
+
+      // Fallback for unexpected response format
+      return data;
     } catch (error) {
       console.error("Error getting listing by ID:", error);
       throw error;
@@ -152,7 +186,7 @@ class ListingService extends BaseService {
       if (!listing.title) throw new Error("Listing title is required");
       if (!listing.price) throw new Error("Listing price is required");
       if (!listing.category_id) throw new Error("Category is required");
-      if (!listing.user_id) throw new Error("User ID is required");
+      // Note: user_id is not required here as it's handled by backend authentication
 
       // Ensure price is a number
       const price = parseFloat(listing.price);
@@ -168,10 +202,10 @@ class ListingService extends BaseService {
         updated_at: new Date().toISOString(),
       };
 
-      // Use the API endpoint instead of direct Supabase access
+      // Use the admin API endpoint for admin dashboard
       const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:5001";
-      const fullUrl = `${apiUrl}/api/listings`;
-      console.log("Creating listing at URL:", fullUrl);
+      const fullUrl = `${apiUrl}/api/admin/listings`;
+      console.log("Creating admin listing at URL:", fullUrl);
 
       const response = await fetch(fullUrl, {
         method: "POST",
@@ -191,7 +225,14 @@ class ListingService extends BaseService {
 
       const data = await response.json();
       console.log("Listing created successfully:", data);
-      return data.data || data;
+
+      // Return the data from the response
+      if (data.success && data.data) {
+        return data.data;
+      }
+
+      // Fallback for unexpected response format
+      return data;
     } catch (error) {
       console.error("Error creating listing:", error);
       throw error;
@@ -221,10 +262,10 @@ class ListingService extends BaseService {
       // Add updated_at timestamp
       updatedData.updated_at = new Date().toISOString();
 
-      // Use the API endpoint instead of direct Supabase access
+      // Use the admin API endpoint for admin dashboard
       const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:5001";
-      const fullUrl = `${apiUrl}/api/listings/${id}`;
-      console.log("Updating listing at URL:", fullUrl);
+      const fullUrl = `${apiUrl}/api/admin/listings/${id}`;
+      console.log("Updating admin listing at URL:", fullUrl);
 
       const response = await fetch(fullUrl, {
         method: "PUT",
@@ -244,7 +285,14 @@ class ListingService extends BaseService {
 
       const data = await response.json();
       console.log("Raw API response:", data);
-      return data.data || data;
+
+      // Return the data from the response
+      if (data.success && data.data) {
+        return data.data;
+      }
+
+      // Fallback for unexpected response format
+      return data;
     } catch (error) {
       console.error("Error updating listing:", error);
       throw error;
@@ -264,10 +312,10 @@ class ListingService extends BaseService {
         throw new Error("Listing ID is required");
       }
 
-      // Use the API endpoint instead of direct Supabase access
+      // Use the admin API endpoint for admin dashboard
       const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:5001";
-      const fullUrl = `${apiUrl}/api/listings/${id}`;
-      console.log("Deleting listing at URL:", fullUrl);
+      const fullUrl = `${apiUrl}/api/admin/listings/${id}`;
+      console.log("Deleting admin listing at URL:", fullUrl);
 
       const response = await fetch(fullUrl, {
         method: "DELETE",
@@ -292,6 +340,7 @@ class ListingService extends BaseService {
 
   /**
    * Get listings by category (including all subcategories)
+   * Note: This method uses the public API since admin routes don't have category-specific endpoints
    * @param {string} categoryId - Parent category ID
    * @param {Object} options - Additional options like limit, status
    * @returns {Promise<Array>} Array of listings
@@ -303,51 +352,13 @@ class ListingService extends BaseService {
         options
       );
 
-      const queryParams = new URLSearchParams();
+      // For category-specific listings, we'll use the main getListings method with category filter
+      const filters = {
+        category: categoryId,
+        ...options,
+      };
 
-      // Add options to query params
-      if (options.status && options.status !== "all") {
-        queryParams.append("status", options.status);
-      }
-
-      if (options.is_featured === true) {
-        queryParams.append("featured", "true");
-      }
-
-      if (options.limit) {
-        queryParams.append("limit", options.limit);
-      }
-
-      if (options.orderBy) {
-        queryParams.append("orderBy", options.orderBy);
-      }
-
-      if (options.orderDirection) {
-        queryParams.append("orderDirection", options.orderDirection);
-      }
-
-      const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:5001";
-      const fullUrl = `${apiUrl}/api/listings/category/${categoryId}?${queryParams.toString()}`;
-      console.log("Fetching category listings from URL:", fullUrl);
-
-      const response = await fetch(fullUrl, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      console.log("Response status:", response.status);
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("API error fetching listings by category:", errorData);
-        return [];
-      }
-
-      const data = await response.json();
-      console.log("Raw API response:", data);
-      return data.data || data || [];
+      return await this.getListings(filters);
     } catch (error) {
       console.error("Error getting listings by category:", error);
       return [];
@@ -361,31 +372,17 @@ class ListingService extends BaseService {
    */
   async getFeaturedListings(limit = 8) {
     try {
-      const queryParams = new URLSearchParams();
-      queryParams.append("limit", limit);
+      console.log("Fetching featured listings with limit:", limit);
 
-      const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:5001";
-      const fullUrl = `${apiUrl}/api/listings/featured?${queryParams.toString()}`;
-      console.log("Fetching featured listings from URL:", fullUrl);
+      // Use the main getListings method with featured filter
+      const filters = {
+        is_featured: true,
+        limit: limit,
+        orderBy: "created_at",
+        orderDirection: "desc",
+      };
 
-      const response = await fetch(fullUrl, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      console.log("Response status:", response.status);
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("API error fetching featured listings:", errorData);
-        return [];
-      }
-
-      const data = await response.json();
-      console.log("Raw API response:", data);
-      return data.data || data || [];
+      return await this.getListings(filters);
     } catch (error) {
       console.error("Error getting featured listings:", error);
       return [];
@@ -401,7 +398,9 @@ class ListingService extends BaseService {
     try {
       // This method would need to be implemented via API
       // For now, return 0 as a placeholder
-      console.warn("countListingsByCategory not implemented via API yet");
+      console.warn(
+        `countListingsByCategory not implemented via API yet for category: ${categoryId}`
+      );
       return 0;
     } catch (error) {
       console.error("Error counting listings by category:", error);

@@ -9,6 +9,24 @@ const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
 
+// Helper function to check if user is allowed to access admin dashboard
+const isUserAllowedForAdmin = (user, userTable) => {
+  // Allow users from admin_users table (these are admin users)
+  if (userTable === "admin_users") {
+    return true;
+  }
+
+  // For users from the regular users table, check user_type
+  if (userTable === "users") {
+    // Only allow super_admin user_type from users table
+    // Block customer and vendor/owner user types
+    return user.user_type === "super_admin";
+  }
+
+  // Default to false for unknown table types
+  return false;
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -40,14 +58,57 @@ export const AuthProvider = ({ children }) => {
             const currentUser = await authService.getCurrentUser();
 
             if (currentUser) {
-              setUser(currentUser);
-              setIsAuthenticated(true);
-              console.log("Initial auth check: User data loaded successfully");
+              // Check if the current user is allowed to access admin dashboard
+              // Note: We need to determine userTable from the stored data or API response
+              const storedUserTable =
+                localStorage.getItem("userTable") || "users"; // Default to users if not stored
+              const isAdminUser = isUserAllowedForAdmin(
+                currentUser,
+                storedUserTable
+              );
+
+              if (isAdminUser) {
+                setUser(currentUser);
+                setIsAuthenticated(true);
+                console.log(
+                  "Initial auth check: User data loaded successfully"
+                );
+              } else {
+                console.log(
+                  "User not authorized for admin dashboard, logging out"
+                );
+                // Clear unauthorized user data
+                localStorage.removeItem("token");
+                localStorage.removeItem("user");
+                localStorage.removeItem("userTable");
+                setUser(null);
+                setIsAuthenticated(false);
+              }
             } else {
-              // Token might be invalid, use stored data as fallback
-              console.warn("API returned null, using stored user data");
-              setUser(userData);
-              setIsAuthenticated(true);
+              // Token might be invalid, use stored data as fallback but check authorization
+              console.warn(
+                "API returned null, checking stored user data authorization"
+              );
+              const storedUserTable =
+                localStorage.getItem("userTable") || "users";
+              const isAdminUser = isUserAllowedForAdmin(
+                userData,
+                storedUserTable
+              );
+
+              if (isAdminUser) {
+                setUser(userData);
+                setIsAuthenticated(true);
+              } else {
+                console.log(
+                  "Stored user not authorized for admin dashboard, clearing data"
+                );
+                localStorage.removeItem("token");
+                localStorage.removeItem("user");
+                localStorage.removeItem("userTable");
+                setUser(null);
+                setIsAuthenticated(false);
+              }
             }
           } catch (error) {
             console.error(
@@ -96,6 +157,22 @@ export const AuthProvider = ({ children }) => {
       // If we have a valid result with user data
       if (result && result.user) {
         console.log("Setting user from auth response:", result.user);
+
+        // Check if user is allowed to access admin dashboard
+        const isAdminUser = isUserAllowedForAdmin(
+          result.user,
+          result.userTable
+        );
+
+        if (!isAdminUser) {
+          console.log(
+            "User type not allowed for admin dashboard:",
+            result.user.user_type
+          );
+          setLoading(false);
+          throw new Error("UNAUTHORIZED_USER_TYPE");
+        }
+
         setUser(result.user);
         setIsAuthenticated(true);
 
@@ -106,6 +183,7 @@ export const AuthProvider = ({ children }) => {
 
         // Store user data
         localStorage.setItem("user", JSON.stringify(result.user));
+        localStorage.setItem("userTable", result.userTable); // Store userTable for future authorization checks
         if (result.session) {
           localStorage.setItem("session", JSON.stringify(result.session));
         }
@@ -118,7 +196,13 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (error) {
       console.error("Login error:", error);
-      toast.error("Login failed. Please check your credentials.");
+
+      // Don't show generic error message for unauthorized user types
+      // The Login component will handle this specific error
+      if (error.message !== "UNAUTHORIZED_USER_TYPE") {
+        toast.error("Login failed. Please check your credentials.");
+      }
+
       setLoading(false);
       return false;
     }
@@ -134,6 +218,9 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       setIsAuthenticated(false);
 
+      // Clear userTable from localStorage
+      localStorage.removeItem("userTable");
+
       if (result.warning) {
         toast.success("Logged out locally. Server connection unavailable.");
         console.warn(result.warning);
@@ -146,6 +233,7 @@ export const AuthProvider = ({ children }) => {
       setSession(null);
       setUser(null);
       setIsAuthenticated(false);
+      localStorage.removeItem("userTable");
       toast.success("Logged out locally");
     }
   };

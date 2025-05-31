@@ -103,6 +103,7 @@ class CategoryService extends BaseService {
         description: category.description || "",
         status: category.status || "active",
         parent_id: category.parent_id || null,
+        image_url: category.image_url || null,
       };
 
       console.log("Creating category with data:", categoryData);
@@ -141,6 +142,7 @@ class CategoryService extends BaseService {
         description: category.description || "",
         status: category.status || "active",
         parent_id: category.parent_id || null,
+        image_url: category.image_url || null,
       };
 
       console.log("Updating category with data:", updateData);

@@ -39,7 +39,8 @@ const API_CONFIG = {
     users: "/api/users",
     admins: "/api/admins",
     categories: "/api/categories",
-    listings: "/api/listings",
+    listings: "/api/admin/listings", // Admin dashboard uses admin listing routes
+    publicListings: "/api/listings", // Public listing routes for reference
     payments: "/api/payments",
     plans: "/api/plans",
     settings: "/api/settings",

@@ -1,30 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import { toast } from 'react-hot-toast';
-import roleService from '../../services/roleService';
-import { useNavigate } from 'react-router-dom';
-import { 
-  RiAddLine, 
-  RiEdit2Line, 
-  RiDeleteBinLine, 
-  RiCheckLine, 
+import React, { useState, useEffect } from "react";
+import { toast } from "react-hot-toast";
+import roleService from "../../services/roleService";
+import { useNavigate } from "react-router-dom";
+import {
+  RiAddLine,
+  RiEdit2Line,
+  RiDeleteBinLine,
+  RiCheckLine,
   RiCloseLine,
-  RiSearchLine
-} from 'react-icons/ri';
+  RiSearchLine,
+} from "react-icons/ri";
 
 const RoleManagement = () => {
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [modalMode, setModalMode] = useState('add'); // 'add' or 'edit'
+  const [modalMode, setModalMode] = useState("add"); // 'add' or 'edit'
   const [currentRole, setCurrentRole] = useState(null);
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    status: 'active',
-    permissions: []
+    name: "",
+    description: "",
+    status: "active",
+    permissions: [],
   });
-  const [searchTerm, setSearchTerm] = useState('');
-  
+  const [searchTerm, setSearchTerm] = useState("");
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -34,105 +34,23 @@ const RoleManagement = () => {
   const fetchRoles = async () => {
     try {
       setLoading(true);
-      console.log('Fetching roles from Supabase...');
+      console.log("Fetching roles from Supabase...");
       const data = await roleService.getAllRoles();
-      
+
       if (data && data.length > 0) {
         // Ensure permissions field is an array
-        const processedData = data.map(role => ({
+        const processedData = data.map((role) => ({
           ...role,
-          permissions: Array.isArray(role.permissions) ? role.permissions : []
+          permissions: Array.isArray(role.permissions) ? role.permissions : [],
         }));
-        
+
         setRoles(processedData);
-        console.log('Roles loaded successfully:', processedData);
-      } else {
-        console.warn('No roles returned from API, using mock data');
-        // Fallback to mock data if no roles are returned
-        const mockRoles = [
-          {
-            id: '1',
-            name: 'Super Admin',
-            description: 'Full system access with all permissions',
-            status: 'active',
-            is_system_role: true,
-            permissions: ['users', 'admins', 'listings', 'categories', 'payments', 'plans', 'settings', 'support'],
-            created_at: '2023-01-01T00:00:00Z'
-          },
-          {
-            id: '2',
-            name: 'Admin',
-            description: 'Administrative access with limited permissions',
-            status: 'active',
-            is_system_role: true,
-            permissions: ['users', 'listings', 'categories', 'support'],
-            created_at: '2023-01-01T00:00:00Z'
-          },
-          {
-            id: '3',
-            name: 'Content Manager',
-            description: 'Manages content and listings',
-            status: 'active',
-            is_system_role: false,
-            permissions: ['listings', 'categories'],
-            created_at: '2023-01-02T00:00:00Z'
-          },
-          {
-            id: '4',
-            name: 'Support Agent',
-            description: 'Handles customer support requests',
-            status: 'active',
-            is_system_role: false,
-            permissions: ['support'],
-            created_at: '2023-01-03T00:00:00Z'
-          }
-        ];
-        setRoles(mockRoles);
+        console.log("Roles loaded successfully:", processedData);
       }
     } catch (error) {
-      console.error('Error fetching roles:', error);
-      toast.error('Failed to fetch roles. Using mock data instead.');
-      
-      // Fallback to mock data if API fails
-      const mockRoles = [
-        {
-          id: '1',
-          name: 'Super Admin',
-          description: 'Full system access with all permissions',
-          status: 'active',
-          is_system_role: true,
-          permissions: ['users', 'admins', 'listings', 'categories', 'payments', 'plans', 'settings', 'support'],
-          created_at: '2023-01-01T00:00:00Z'
-        },
-        {
-          id: '2',
-          name: 'Admin',
-          description: 'Administrative access with limited permissions',
-          status: 'active',
-          is_system_role: true,
-          permissions: ['users', 'listings', 'categories', 'support'],
-          created_at: '2023-01-01T00:00:00Z'
-        },
-        {
-          id: '3',
-          name: 'Content Manager',
-          description: 'Manages content and listings',
-          status: 'active',
-          is_system_role: false,
-          permissions: ['listings', 'categories'],
-          created_at: '2023-01-02T00:00:00Z'
-        },
-        {
-          id: '4',
-          name: 'Support Agent',
-          description: 'Handles customer support requests',
-          status: 'active',
-          is_system_role: false,
-          permissions: ['support'],
-          created_at: '2023-01-03T00:00:00Z'
-        }
-      ];
-      setRoles(mockRoles);
+      console.error("Error fetching roles:", error);
+      toast.error("Failed to fetch roles from API");
+      setRoles([]); // Set empty array on error instead of mock data
     } finally {
       setLoading(false);
     }
@@ -142,30 +60,30 @@ const RoleManagement = () => {
   const handleChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
   // Open modal for adding a new role
   const openAddModal = () => {
-    setModalMode('add');
+    setModalMode("add");
     setFormData({
-      name: '',
-      description: '',
-      status: 'active',
-      permissions: []
+      name: "",
+      description: "",
+      status: "active",
+      permissions: [],
     });
     setShowModal(true);
   };
 
   // Open modal for editing a role
   const openEditModal = (role) => {
-    setModalMode('edit');
+    setModalMode("edit");
     setCurrentRole(role);
     setFormData({
       name: role.name,
-      description: role.description || '',
-      status: role.status || 'active'
+      description: role.description || "",
+      status: role.status || "active",
     });
     setShowModal(true);
   };
@@ -173,34 +91,34 @@ const RoleManagement = () => {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validate form data
     if (!formData.name.trim()) {
-      toast.error('Role name is required');
+      toast.error("Role name is required");
       return;
     }
 
     // Prepare role data
     const roleData = {
       ...formData,
-      is_system_role: false // New roles created through UI are never system roles
+      is_system_role: false, // New roles created through UI are never system roles
     };
-    
+
     try {
-      if (modalMode === 'add') {
+      if (modalMode === "add") {
         // Add role
-        console.log('Creating new role:', roleData);
+        console.log("Creating new role:", roleData);
         const newRole = await roleService.createRole(roleData);
-        
+
         if (newRole) {
           setRoles([...roles, newRole]);
-          toast.success('Role added successfully');
+          toast.success("Role added successfully");
           setShowModal(false);
           setFormData({
-            name: '',
-            description: '',
-            status: 'active',
-            permissions: []
+            name: "",
+            description: "",
+            status: "active",
+            permissions: [],
           });
         }
       } else {
@@ -213,58 +131,75 @@ const RoleManagement = () => {
           roleData.is_system_role = true; // Preserve system role flag
         }
 
-        console.log('Updating role:', roleData);
-        const updatedRole = await roleService.updateRole(currentRole.id, roleData);
-        
+        console.log("Updating role:", roleData);
+        const updatedRole = await roleService.updateRole(
+          currentRole.id,
+          roleData
+        );
+
         if (updatedRole) {
-          setRoles(roles.map(role => role.id === currentRole.id ? {
-            ...role,
-            ...updatedRole
-          } : role));
-          toast.success('Role updated successfully');
+          setRoles(
+            roles.map((role) =>
+              role.id === currentRole.id
+                ? {
+                    ...role,
+                    ...updatedRole,
+                  }
+                : role
+            )
+          );
+          toast.success("Role updated successfully");
           setShowModal(false);
           setFormData({
-            name: '',
-            description: '',
-            status: 'active',
-            permissions: []
+            name: "",
+            description: "",
+            status: "active",
+            permissions: [],
           });
         }
       }
     } catch (error) {
-      console.error('Error saving role:', error);
-      toast.error(`Failed to save role: ${error.message || 'Unknown error'}`);
+      console.error("Error saving role:", error);
+      toast.error(`Failed to save role: ${error.message || "Unknown error"}`);
     }
   };
 
   // Handle role deletion
   const handleDelete = async (roleId) => {
     // Find the role to check if it's a system role
-    const roleToDelete = roles.find(role => role.id === roleId);
-    
+    const roleToDelete = roles.find((role) => role.id === roleId);
+
     if (roleToDelete?.is_system_role) {
-      toast.error('System roles cannot be deleted');
+      toast.error("System roles cannot be deleted");
       return;
     }
-    
-    if (window.confirm('Are you sure you want to delete this role? This action cannot be undone.')) {
+
+    if (
+      window.confirm(
+        "Are you sure you want to delete this role? This action cannot be undone."
+      )
+    ) {
       try {
-        console.log('Deleting role:', roleId);
+        console.log("Deleting role:", roleId);
         await roleService.deleteRole(roleId);
-        setRoles(roles.filter(role => role.id !== roleId));
-        toast.success('Role deleted successfully');
+        setRoles(roles.filter((role) => role.id !== roleId));
+        toast.success("Role deleted successfully");
       } catch (error) {
-        console.error('Error deleting role:', error);
-        toast.error(`Failed to delete role: ${error.message || 'Unknown error'}`);
+        console.error("Error deleting role:", error);
+        toast.error(
+          `Failed to delete role: ${error.message || "Unknown error"}`
+        );
       }
     }
   };
 
   // Filter roles based on search term
   const filteredRoles = searchTerm
-    ? roles.filter(role => 
-        role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (role.description && role.description.toLowerCase().includes(searchTerm.toLowerCase()))
+    ? roles.filter(
+        (role) =>
+          role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (role.description &&
+            role.description.toLowerCase().includes(searchTerm.toLowerCase()))
       )
     : roles;
 
@@ -307,27 +242,51 @@ const RoleManagement = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">System Role</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Name
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Description
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  System Role
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {loading ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-4 text-center text-sm text-gray-500">Loading...</td>
+                  <td
+                    colSpan="5"
+                    className="px-6 py-4 text-center text-sm text-gray-500"
+                  >
+                    Loading...
+                  </td>
                 </tr>
               ) : filteredRoles.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-4 text-center text-sm text-gray-500">No roles found</td>
+                  <td
+                    colSpan="5"
+                    className="px-6 py-4 text-center text-sm text-gray-500"
+                  >
+                    No roles found
+                  </td>
                 </tr>
               ) : (
                 filteredRoles.map((role) => (
                   <tr key={role.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{role.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{role.description || 'N/A'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {role.name}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {role.description || "N/A"}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {role.is_system_role ? (
                         <span className="flex items-center text-green-600">
@@ -340,11 +299,13 @@ const RoleManagement = () => {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        role.status === 'active' 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
-                      }`}>
+                      <span
+                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          role.status === "active"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
                         {role.status}
                       </span>
                     </td>
@@ -354,7 +315,11 @@ const RoleManagement = () => {
                           onClick={() => openEditModal(role)}
                           className="text-blue-600 hover:text-blue-900 disabled:opacity-50 disabled:cursor-not-allowed"
                           disabled={role.is_system_role}
-                          title={role.is_system_role ? "System roles cannot be edited" : "Edit role"}
+                          title={
+                            role.is_system_role
+                              ? "System roles cannot be edited"
+                              : "Edit role"
+                          }
                         >
                           <RiEdit2Line className="w-5 h-5" />
                         </button>
@@ -362,7 +327,11 @@ const RoleManagement = () => {
                           onClick={() => handleDelete(role.id)}
                           className="text-red-600 hover:text-red-900 disabled:opacity-50 disabled:cursor-not-allowed"
                           disabled={role.is_system_role}
-                          title={role.is_system_role ? "System roles cannot be deleted" : "Delete role"}
+                          title={
+                            role.is_system_role
+                              ? "System roles cannot be deleted"
+                              : "Delete role"
+                          }
                         >
                           <RiDeleteBinLine className="w-5 h-5" />
                         </button>
@@ -380,20 +349,34 @@ const RoleManagement = () => {
       {showModal && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-              <div className="absolute inset-0 bg-gray-500 opacity-75" onClick={() => setShowModal(false)}></div>
+            <div
+              className="fixed inset-0 transition-opacity"
+              aria-hidden="true"
+            >
+              <div
+                className="absolute inset-0 bg-gray-500 opacity-75"
+                onClick={() => setShowModal(false)}
+              ></div>
             </div>
 
-            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <span
+              className="hidden sm:inline-block sm:align-middle sm:h-screen"
+              aria-hidden="true"
+            >
+              &#8203;
+            </span>
 
             <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
               <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-                  {modalMode === 'add' ? 'Add New Role' : 'Edit Role'}
+                  {modalMode === "add" ? "Add New Role" : "Edit Role"}
                 </h3>
                 <form onSubmit={handleSubmit}>
                   <div className="mb-4">
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="name"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Role Name
                     </label>
                     <input
@@ -404,14 +387,21 @@ const RoleManagement = () => {
                       onChange={handleChange}
                       className="input"
                       required
-                      disabled={modalMode === 'edit' && currentRole?.is_system_role}
+                      disabled={
+                        modalMode === "edit" && currentRole?.is_system_role
+                      }
                     />
-                    {modalMode === 'edit' && currentRole?.is_system_role && (
-                      <p className="mt-1 text-xs text-gray-500">System role names cannot be changed</p>
+                    {modalMode === "edit" && currentRole?.is_system_role && (
+                      <p className="mt-1 text-xs text-gray-500">
+                        System role names cannot be changed
+                      </p>
                     )}
                   </div>
                   <div className="mb-4">
-                    <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="description"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Description
                     </label>
                     <textarea
@@ -424,13 +414,22 @@ const RoleManagement = () => {
                       placeholder="Describe the purpose of this role"
                     ></textarea>
                   </div>
-                  
+
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Permissions
                     </label>
                     <div className="grid grid-cols-2 gap-2 border p-3 rounded-md bg-gray-50">
-                      {['users', 'admins', 'listings', 'categories', 'payments', 'plans', 'settings', 'support'].map((permission) => (
+                      {[
+                        "users",
+                        "admins",
+                        "listings",
+                        "categories",
+                        "payments",
+                        "plans",
+                        "settings",
+                        "support",
+                      ].map((permission) => (
                         <div key={permission} className="flex items-center">
                           <input
                             type="checkbox"
@@ -441,32 +440,48 @@ const RoleManagement = () => {
                               if (e.target.checked) {
                                 setFormData({
                                   ...formData,
-                                  permissions: [...(formData.permissions || []), permission]
+                                  permissions: [
+                                    ...(formData.permissions || []),
+                                    permission,
+                                  ],
                                 });
                               } else {
                                 setFormData({
                                   ...formData,
-                                  permissions: (formData.permissions || []).filter(p => p !== permission)
+                                  permissions: (
+                                    formData.permissions || []
+                                  ).filter((p) => p !== permission),
                                 });
                               }
                             }}
                             className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                            disabled={modalMode === 'edit' && currentRole?.is_system_role}
+                            disabled={
+                              modalMode === "edit" &&
+                              currentRole?.is_system_role
+                            }
                           />
-                          <label htmlFor={`permission-${permission}`} className="ml-2 block text-sm text-gray-700 capitalize">
+                          <label
+                            htmlFor={`permission-${permission}`}
+                            className="ml-2 block text-sm text-gray-700 capitalize"
+                          >
                             {permission}
                           </label>
                         </div>
                       ))}
                     </div>
-                    {modalMode === 'edit' && currentRole?.is_system_role && (
-                      <p className="mt-1 text-xs text-gray-500">System role permissions cannot be modified</p>
+                    {modalMode === "edit" && currentRole?.is_system_role && (
+                      <p className="mt-1 text-xs text-gray-500">
+                        System role permissions cannot be modified
+                      </p>
                     )}
                   </div>
-                  
-                  {modalMode === 'edit' && (
+
+                  {modalMode === "edit" && (
                     <div className="mb-4">
-                      <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
+                      <label
+                        htmlFor="status"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
                         Status
                       </label>
                       <select
@@ -481,7 +496,9 @@ const RoleManagement = () => {
                         <option value="inactive">Inactive</option>
                       </select>
                       {currentRole?.is_system_role && (
-                        <p className="mt-1 text-xs text-gray-500">System role status cannot be changed</p>
+                        <p className="mt-1 text-xs text-gray-500">
+                          System role status cannot be changed
+                        </p>
                       )}
                     </div>
                   )}
@@ -493,11 +510,8 @@ const RoleManagement = () => {
                     >
                       Cancel
                     </button>
-                    <button
-                      type="submit"
-                      className="btn-primary"
-                    >
-                      {modalMode === 'add' ? 'Add Role' : 'Update Role'}
+                    <button type="submit" className="btn-primary">
+                      {modalMode === "add" ? "Add Role" : "Update Role"}
                     </button>
                   </div>
                 </form>
